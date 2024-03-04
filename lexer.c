@@ -62,47 +62,35 @@ void print_token(Token token){
 
 Token *lexer(FILE *file){
     // Read entire file into a buffer first
-    char *buffer = 0;
+    char *current = 0;
     fseek(file, 0, SEEK_END);
     int length = ftell(file); // get the length of the file
     fseek(file, 0, SEEK_SET);
-    buffer = malloc(sizeof(char) * length);
-    fread(buffer, 1, length, file);
+    current = malloc(sizeof(char) * length + 1);
+    fread(current, 1, length, file);
     fclose(file);
-    buffer[length + 1] = '\0'; // null terminate the buffer
-    char *current = malloc(sizeof(char) * length + 1);
-    current = buffer;
+
+    current[length + 1] = '\0'; // null terminate the buffer
     int current_index = 0;
 
-    Token *tokens = malloc(sizeof(Token) * 12); // allocate memory for 10 tokens
+    Token *tokens = malloc(sizeof(Token) * 1000); // allocate memory for 1000 tokens
     size_t token_index = 0;
 
     while (current[current_index] != '\0'){ 
         char currentChar = current[current_index];
+        Token *token = NULL;
+
         if(currentChar == ';'){
-            Token *semicolon_token = malloc(sizeof(Token));
-            // need to allocate memory for the value of the token as well!
-            semicolon_token->value = malloc(2 * sizeof(char)); // Allocate memory for two characters (one for the semicolon, one for the null terminator)
-            semicolon_token->value[0] = current[current_index];
-            semicolon_token->value[1] = '\0';
-            semicolon_token->type = SEPERATOR;
-            tokens[token_index] = *semicolon_token;
+            token = generate_seperator(current, &current_index);
+            tokens[token_index] = *token;
             token_index++;
         }else if(currentChar == '('){
-            Token *open_paren_token = malloc(sizeof(Token));
-            open_paren_token->value = malloc(2 * sizeof(char)); // Allocate memory for two characters (one for the semicolon, one for the null terminator)
-            open_paren_token->value[0] = currentChar;
-            open_paren_token->value[1] = '\0';
-            open_paren_token->type = SEPERATOR;
-            tokens[token_index] = *open_paren_token;
+            token = generate_seperator(current, &current_index);
+            tokens[token_index] = *token;
             token_index++;
         }else if(currentChar == ')'){
-            Token *close_paren_token = malloc(sizeof(Token));
-            close_paren_token->value = malloc(2 * sizeof(char)); // Allocate memory for two characters (one for the semicolon, one for the null terminator) 
-            close_paren_token->value[0] = currentChar;
-            close_paren_token->value[1] = '\0';
-            close_paren_token->type = SEPERATOR;
-            tokens[token_index] = *close_paren_token;
+            token = generate_seperator(current, &current_index);
+            tokens[token_index] = *token;
             token_index++;
         }else if(isdigit(currentChar)){
             Token *integer_token = generate_number(current, &current_index);
@@ -114,14 +102,24 @@ Token *lexer(FILE *file){
             tokens[token_index] = *keyword_token;
             token_index++;
             current_index--; // we need to go back one index to account for the increment in the generate_keyword function
-        }else{
-            printf("ERROR: Unrecognized character: %c\n", currentChar);
-            exit(1);
         }
 
         current_index++;
     } 
-    tokens[token_index].value = '\0'; // null terminate the array of tokens
+    // null terminate the array of tokens so we know when to stop when parsing. (alternative to keeping track of the length of the array of tokens)
+    tokens[token_index].value = NULL; // null terminate the array of tokens
     tokens[token_index].type = END_OF_TOKENS;
     return tokens;
+}
+
+
+Token *generate_seperator(char *current, int *current_index){
+    Token *token = malloc(sizeof(Token));
+    // need to allocate memory for the value of the token as well!
+    token->value = malloc(2 * sizeof(char)); // Allocate memory for two characters (one for the semicolon, one for the null terminator)
+    token->value[0] = current[*current_index];
+    token->value[1] = '\0';
+    token->type = SEPERATOR;
+
+    return token;
 }
