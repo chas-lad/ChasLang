@@ -58,6 +58,13 @@ void print_token(Token token){
     if(token.type == SEPERATOR){
         printf(" Type: SEPERATOR\n");
     }   
+    if (token.type == END_OF_TOKENS){
+        printf(" Type: END_OF_TOKENS\n");
+    }
+    if (token.type == BEGINNING){
+        printf(" Type: BEGINNING\n");
+    }
+
 }
 
 Token *lexer(FILE *file){
