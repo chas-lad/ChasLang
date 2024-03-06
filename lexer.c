@@ -58,6 +58,9 @@ void print_token(Token token){
     if(token.type == SEPERATOR){
         printf(" Type: SEPERATOR\n");
     }   
+    if(token.type == OPERATOR){
+        printf(" Type: OPERATOR\n");
+    }
     if (token.type == END_OF_TOKENS){
         printf(" Type: END_OF_TOKENS\n");
     }
@@ -78,25 +81,33 @@ Token *lexer(FILE *file){
     fclose(file);
 
     current[length + 1] = '\0'; // null terminate the buffer
-    int current_index = 0;
+    int current_index = 0; // keep track of where we are in the buffer
 
     Token *tokens = malloc(sizeof(Token) * 1000); // allocate memory for 1000 tokens
-    size_t token_index = 0;
+    size_t token_index = 0; // keep track of where we are in the array of tokens
 
     while (current[current_index] != '\0'){ 
         char currentChar = current[current_index];
         Token *token = NULL;
 
         if(currentChar == ';'){
-            token = generate_seperator(current, &current_index);
+            token = generate_seperator_or_operator(current, &current_index, SEPERATOR);
             tokens[token_index] = *token;
             token_index++;
         }else if(currentChar == '('){
-            token = generate_seperator(current, &current_index);
+            token = generate_seperator_or_operator(current, &current_index, SEPERATOR);
             tokens[token_index] = *token;
             token_index++;
         }else if(currentChar == ')'){
-            token = generate_seperator(current, &current_index);
+            token = generate_seperator_or_operator(current, &current_index, SEPERATOR);
+            tokens[token_index] = *token;
+            token_index++;
+        }else if(currentChar == '+'){
+            token = generate_seperator_or_operator(current, &current_index, OPERATOR);
+            tokens[token_index] = *token;
+            token_index++;
+        } else if(currentChar == '-'){
+            token = generate_seperator_or_operator(current, &current_index, OPERATOR);
             tokens[token_index] = *token;
             token_index++;
         }else if(isdigit(currentChar)){
@@ -120,13 +131,13 @@ Token *lexer(FILE *file){
 }
 
 
-Token *generate_seperator(char *current, int *current_index){
+Token *generate_seperator_or_operator(char *current, int *current_index, TokenType type){
     Token *token = malloc(sizeof(Token));
     // need to allocate memory for the value of the token as well!
     token->value = malloc(2 * sizeof(char)); // Allocate memory for two characters (one for the semicolon, one for the null terminator)
     token->value[0] = current[*current_index];
     token->value[1] = '\0';
-    token->type = SEPERATOR;
+    token->type = type;
 
     return token;
 }

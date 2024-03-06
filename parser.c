@@ -45,6 +45,31 @@ void print_error(char *message){
     exit(EXIT_FAILURE);
 }
 
+Token *generate_operation_nodes(Token *current_token, Node *current_node){
+    Node *oper_node = init_node(oper_node, current_token->value, OPERATOR);
+    current_node->left->left = oper_node;
+    current_token--;
+    while(current_token->type == INT || current_token->type == OPERATOR){
+        if(current_token->type == INT){
+            Node *expr_node = init_node(expr_node, current_token->value, INT);
+            oper_node->left = expr_node;
+            current_token++;
+            current_token++;
+            if(current_token->type != INT || current_token->type == NULL){
+                print_error("Invalid syntax on INT");
+                exit(1);    
+            }
+            Node *second_expr_node = init_node(second_expr_node, current_token->value, INT);
+            oper_node->right = second_expr_node;
+        }
+        if(current_token->type == OPERATOR){
+            
+        }
+        current_token++;
+    }
+    return current_token;
+}
+
 Token *parser(Token *tokens){
     // Check if tokens is NULL or empty
     if (tokens == NULL || tokens->type == END_OF_TOKENS) {
@@ -87,8 +112,16 @@ Token *parser(Token *tokens){
                             print_error("Invalid syntax on INT");
                         }
                         if(current_token->type == INT){
-                            Node *expr_node = init_node(expr_node, current_token->value, INT);
-                            current->left->left = expr_node;
+                            current_token++;
+                            if(current_token->type == OPERATOR && current_token->type != NULL){
+                                current_token = generate_operation_nodes(current_token, current);
+                                current_token--;
+                            }
+                            else{
+                                current_token--;
+                                Node *expr_node = init_node(expr_node, current_token->value, INT);
+                                current->left->left = expr_node;
+                            }
                             current_token++;
                             if(current_token->type == END_OF_TOKENS){
                                 print_error("Invalid syntax on CLOSE");
@@ -138,7 +171,7 @@ Token *parser(Token *tokens){
     }
     printf("Done parsing\n");
 
-    // print_tree(root);
+    print_tree(root);
 
     return root;
 }
