@@ -5,6 +5,7 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include "codegenerator.h"
 
 
 int main(int argc, char *argv[]) {
@@ -20,5 +21,15 @@ int main(int argc, char *argv[]) {
         print_token(tokens[i]);
     }
 
-    parser(tokens);
+    Node *test = parser(tokens);
+
+    generate_code(test);
+    FILE *assembly_file = fopen("generated.asm", "r");
+    if(assembly_file == NULL){
+        printf("Could not open file\n");
+        exit(1);
+    }
+
+    system("nasm -f macho64 -o generated.o generated.asm");
+    system("clang -o generated generated.o -e _start");
 }

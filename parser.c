@@ -138,7 +138,7 @@ Token *parser(Token *tokens){
     }
     printf("Done parsing\n");
 
-    print_tree(root);
+    // print_tree(root);
 
-    return current_token;
+    return root;
 }
