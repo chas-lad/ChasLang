@@ -110,6 +110,14 @@ Token *lexer(FILE *file){
             token = generate_seperator_or_operator(current, &current_index, OPERATOR);
             tokens[token_index] = *token;
             token_index++;
+        }else if(currentChar == '*'){
+            token = generate_seperator_or_operator(current, &current_index, OPERATOR);
+            tokens[token_index] = *token;
+            token_index++;
+        }else if(currentChar == '/'){
+            token = generate_seperator_or_operator(current, &current_index, OPERATOR);
+            tokens[token_index] = *token;
+            token_index++;
         }else if(isdigit(currentChar)){
             Token *integer_token = generate_number(current, &current_index);
             tokens[token_index] = *integer_token;

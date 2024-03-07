@@ -17,9 +17,9 @@ int main(int argc, char *argv[]) {
     file = fopen(argv[1], "r");
 
     Token *tokens = lexer(file);
-    // for(int i = 0; tokens[i].type != END_OF_TOKENS; i++){
-    //     print_token(tokens[i]);
-    // }
+    for(int i = 0; tokens[i].type != END_OF_TOKENS; i++){
+        print_token(tokens[i]);
+    }
 
     Node *test = parser(tokens);
 

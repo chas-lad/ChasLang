@@ -49,18 +49,29 @@ void traverse_tree(Node *node, int is_left, FILE *file){
     }
     // Use our hashmap to find the correct assembly instruction for the operator
     if(node->type == OPERATOR){
-        fprintf(file, "  mov rdi, %s\n", node->left->value);
-        Node *tmp = node;
-        while(tmp->right->type == OPERATOR){
-            char *operator = search(tmp->value[0])->data;
-            tmp = tmp->right;
-            fprintf(file, "  %s rdi, %s\n", operator,tmp->left->value);
-
+        if(strcmp(node->value, "/") == 0){
+            fprintf(file, "  mov rax, %s\n", node->right->value);
+            fprintf(file, "  mov rbx, %s\n", node->left->value);
+            fprintf(file, "  idiv rbx\n");
+            fprintf(file, "  mov rdi, rax\n");
+            fprintf(file, "  mov rax, 0x02000001\n");
+            node->left = NULL; 
+            node->right = NULL;
         }
-        fprintf(file, "  %s rdi, %s\n", search(tmp->value[0])->data, tmp->right->value);
+        else{
+            fprintf(file, "  mov rdi, %s\n", node->left->value);
+            Node *tmp = node;
+            while(tmp->right->type == OPERATOR){
+                char *operator = search(tmp->value[0])->data;
+                tmp = tmp->right;
+                fprintf(file, "  %s rdi, %s\n", operator,tmp->left->value);
 
-        node->left = NULL;
-        node->right = NULL;
+            }
+            fprintf(file, "  %s rdi, %s\n", search(tmp->value[0])->data, tmp->right->value);
+
+            node->left = NULL;
+            node->right = NULL;
+        }
     }
     if(node->type == INT){
         fprintf(file, "  mov rdi, %s\n", node->value);
@@ -106,6 +117,7 @@ void zeroRegisters(FILE *file){
 int generate_code(Node *root){
     insert('-', "sub");
     insert('+', "add");
+    insert('*', "imul");
 
     FILE *file = fopen("generated.asm", "w");
     assert(file != NULL && "File could not be opened");
