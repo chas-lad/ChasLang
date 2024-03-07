@@ -83,7 +83,7 @@ Token *lexer(FILE *file){
     current[length + 1] = '\0'; // null terminate the buffer
     int current_index = 0; // keep track of where we are in the buffer
 
-    Token *tokens = malloc(sizeof(Token) * 1000); // allocate memory for 1000 tokens
+    Token *tokens = malloc(sizeof(Token) * 1000); // allocate memory for 1000 tokens - TODO - make this dynamic
     size_t token_index = 0; // keep track of where we are in the array of tokens
 
     while (current[current_index] != '\0'){ 

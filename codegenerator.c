@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include "parser.h"
+#include "./hashmap/hashmap.h"
 
 
 // How I want to deal with addition 
@@ -33,6 +34,7 @@
 // }
 
 
+
 // Important to note that the parser checked that the code is already syntactically correct
 // When printing assembly code to file, tabs are two spaces!
 void traverse_tree(Node *node, int is_left, FILE *file){
@@ -45,21 +47,20 @@ void traverse_tree(Node *node, int is_left, FILE *file){
     if(strcmp(node->value, "(") == 0){
 
     }
+    // Use our hashmap to find the correct assembly instruction for the operator
     if(node->type == OPERATOR){
-        if(strcmp(node->value, "+") == 0){
-            fprintf(file, "  add rdi, %s\n", node->left->value);
-            fprintf(file, "  add rdi, %s\n", node->right->value);
+        fprintf(file, "  mov rdi, %s\n", node->left->value);
+        Node *tmp = node;
+        while(tmp->right->type == OPERATOR){
+            char *operator = search(tmp->value[0])->data;
+            tmp = tmp->right;
+            fprintf(file, "  %s rdi, %s\n", operator,tmp->left->value);
 
-            node->left = NULL;
-            node->right = NULL;
-        } else if(strcmp(node->value, "-") == 0){
-            fprintf(file, "  mov rdi, %s\n", node->left->value);
-            fprintf(file, "  sub rdi, %s\n", node->right->value);
-
-            node->left = NULL;
-            node->right = NULL;
         }
+        fprintf(file, "  %s rdi, %s\n", search(tmp->value[0])->data, tmp->right->value);
 
+        node->left = NULL;
+        node->right = NULL;
     }
     if(node->type == INT){
         fprintf(file, "  mov rdi, %s\n", node->value);
@@ -103,6 +104,9 @@ void zeroRegisters(FILE *file){
 }
 
 int generate_code(Node *root){
+    insert('-', "sub");
+    insert('+', "add");
+
     FILE *file = fopen("generated.asm", "w");
     assert(file != NULL && "File could not be opened");
 
@@ -110,6 +114,8 @@ int generate_code(Node *root){
     fprintf(file, "  global _start\n\n");
     fprintf(file, "_start:\n");
     // print_tree(root);
+    
+    display();
 
     zeroRegisters(file);
 
