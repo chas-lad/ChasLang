@@ -34,44 +34,64 @@
 // }
 
 
+void generate_operator_code(Node *node, char* syscall_number){
+    
+}
+
 
 // Important to note that the parser checked that the code is already syntactically correct
 // When printing assembly code to file, tabs are two spaces!
-void traverse_tree(Node *node, int is_left, FILE *file){
+void traverse_tree(Node *node, int is_left, FILE *file, char* syscall_number){
+    
     if(node == NULL){
         return;
     }
     if(strcmp(node->value, "EXIT") == 0){
-        fprintf(file, "  mov rax, 0x02000001\n");
+        syscall_number = "0x02000001";
+        // fprintf(file, "  mov rax, 0x02000001\n");
     }
     if(strcmp(node->value, "(") == 0){
 
     }
     // Use our hashmap to find the correct assembly instruction for the operator
     if(node->type == OPERATOR){
-        if(strcmp(node->value, "/") == 0){
-            fprintf(file, "  mov rax, %s\n", node->right->value);
-            fprintf(file, "  mov rbx, %s\n", node->left->value);
-            fprintf(file, "  idiv rbx\n");
-            fprintf(file, "  mov rdi, rax\n");
-            fprintf(file, "  mov rax, 0x02000001\n");
-            node->left = NULL; 
-            node->right = NULL;
-        }
-        else{
-            fprintf(file, "  mov rdi, %s\n", node->left->value);
-            Node *tmp = node;
-            while(tmp->right->type == OPERATOR){
-                char *operator = search(tmp->value[0])->data;
-                tmp = tmp->right;
-                fprintf(file, "  %s rdi, %s\n", operator,tmp->left->value);
-
+        Node *tmp = node;
+        fprintf(file, "  mov rax, %s\n", node->left->value);
+        int did_loop = 0;
+        while(tmp->right->type == OPERATOR){
+            did_loop = 1;
+            char *operator = search(tmp->value[0])->data;
+            tmp = tmp->right;
+            fprintf(file, "  mov rbx, %s\n", tmp->left->value);
+            if(strcmp(operator, "mul") == 0 || strcmp(operator, "div") == 0){
+                fprintf(file, "  %s rbx\n", operator);
+                fprintf(file, "  mov rdi, rax\n"); 
             }
-            fprintf(file, "  %s rdi, %s\n", search(tmp->value[0])->data, tmp->right->value);
-
-            node->left = NULL;
-            node->right = NULL;
+            else{
+                fprintf(file, "  %s rax, rbx\n", operator);
+                fprintf(file, "  mov rdi, rax\n");
+            }
         }
+        if(did_loop){
+            if(tmp->value[0] == '*' || tmp->value[0] == '/'){
+                fprintf(file, "  mov rax, rdi\n");
+                fprintf(file, "  mov rbx, %s\n", tmp->right->value);
+                fprintf(file, "  %s rbx\n", search(tmp->value[0])->data);
+                fprintf(file, "  mov rdi, rax\n");
+            }
+            else{
+                fprintf(file, "  %s rdi, %s\n", search(tmp->value[0])->data, tmp->right->value);
+            }
+        } else{
+            fprintf(file, "  mov rbx, %s\n", tmp->right->value);
+            fprintf(file, "  %s rbx\n", search(tmp->value[0])->data);
+            fprintf(file, "  mov rdi, rax\n");
+        }
+
+        fprintf(file, "  mov rax, %s\n", syscall_number);
+        node->left = NULL;
+        node->right = NULL;
+    
     }
     if(node->type == INT){
         fprintf(file, "  mov rdi, %s\n", node->value);
@@ -92,8 +112,8 @@ void traverse_tree(Node *node, int is_left, FILE *file){
         printf("%c", node->value[i]);
     }
     printf("\n");
-    traverse_tree(node->left, 1, file);
-    traverse_tree(node->right, 0, file);
+    traverse_tree(node->left, 1, file, syscall_number);
+    traverse_tree(node->right, 0, file, syscall_number);
 }
 
 // set all our general purpose registers we are going to use to zero before we start
@@ -117,7 +137,8 @@ void zeroRegisters(FILE *file){
 int generate_code(Node *root){
     insert('-', "sub");
     insert('+', "add");
-    insert('*', "imul");
+    insert('*', "mul");
+    insert('/', "div");
 
     FILE *file = fopen("generated.asm", "w");
     assert(file != NULL && "File could not be opened");
@@ -131,7 +152,7 @@ int generate_code(Node *root){
 
     zeroRegisters(file);
 
-    traverse_tree(root, 0, file);
+    traverse_tree(root, 0, file, "0");
     fclose(file); // need to close the file before we can run assembler and linker
     return 0;
 }
