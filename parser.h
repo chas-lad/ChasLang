@@ -10,8 +10,8 @@ typedef struct Node {
     struct Node *left;
 } Node;
 
-Token *parser(Token *tokens);
-void print_tree(Node *node);
+Node *parser(Token *tokens);
+void print_tree(Node *node, int depth, char* side);
 Node *init_node(Node *node, char *value, TokenType type);
 void print_error(char *message);
 

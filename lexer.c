@@ -26,7 +26,7 @@ Token *generate_number(char *current, int *current_index){
 }
 
 // function to continue generating a keyword token once we have found the first letter in a sequence
-Token *generate_keyword(char *current, int *current_index){
+Token *generate_keyword_or_identifier(char *current, int *current_index){
     Token *token = malloc(sizeof(Token));
     char *keyword = malloc(sizeof(char) * 8);
     int keyword_index = 0;
@@ -39,6 +39,14 @@ Token *generate_keyword(char *current, int *current_index){
     if (strcmp(keyword, "exit") == 0){
         token->type = KEYWORD;
         token->value = "EXIT";
+    }
+    else if (strcmp(keyword, "int") == 0){
+        token->type = KEYWORD;
+        token->value = "INT";
+    }
+    else { // IF it is not one of our pre-defined keywords, it will be an identifier
+        token->type = IDENTIFIER;
+        token->value = keyword;
     }
     return token;
 }
@@ -61,6 +69,9 @@ void print_token(Token token){
     if(token.type == OPERATOR){
         printf(" Type: OPERATOR\n");
     }
+    if (token.type == IDENTIFIER){
+        printf(" Type: IDENTIFIER\n");
+    }   
     if (token.type == END_OF_TOKENS){
         printf(" Type: END_OF_TOKENS\n");
     }
@@ -102,6 +113,11 @@ Token *lexer(FILE *file){
             token = generate_seperator_or_operator(current, &current_index, SEPERATOR);
             tokens[token_index] = *token;
             token_index++;
+        }
+        else if(currentChar == '='){
+            token = generate_seperator_or_operator(current, &current_index, OPERATOR);
+            tokens[token_index] = *token;
+            token_index++;
         }else if(currentChar == '+'){
             token = generate_seperator_or_operator(current, &current_index, OPERATOR);
             tokens[token_index] = *token;
@@ -124,7 +140,7 @@ Token *lexer(FILE *file){
             token_index++;
             current_index--; // we need to go back one index to account for the increment in the generate_number function
         }else if(isalpha(currentChar)){
-            Token *keyword_token = generate_keyword(current, &current_index);
+            Token *keyword_token = generate_keyword_or_identifier(current, &current_index);
             tokens[token_index] = *keyword_token;
             token_index++;
             current_index--; // we need to go back one index to account for the increment in the generate_keyword function

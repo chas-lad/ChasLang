@@ -34,27 +34,13 @@
 // }
 
 
-void generate_operator_code(Node *node, char* syscall_number){
-    
-}
-
-
-// Important to note that the parser checked that the code is already syntactically correct
-// When printing assembly code to file, tabs are two spaces!
-void traverse_tree(Node *node, int is_left, FILE *file, char* syscall_number){
-    
-    if(node == NULL){
-        return;
+Node *generate_operator_code(Node *node, char* syscall_number ,FILE *file){
+    if(strcmp(node->value, "=") == 0){
+        fprintf(file, "  push %s\n", node->left->value);
+        node->left = NULL;
+        printf("EQUALS\n");
     }
-    if(strcmp(node->value, "EXIT") == 0){
-        syscall_number = "0x02000001";
-        // fprintf(file, "  mov rax, 0x02000001\n");
-    }
-    if(strcmp(node->value, "(") == 0){
-
-    }
-    // Use our hashmap to find the correct assembly instruction for the operator
-    if(node->type == OPERATOR){
+    else{
         Node *tmp = node;
         fprintf(file, "  mov rax, %s\n", node->left->value);
         int did_loop = 0;
@@ -89,18 +75,55 @@ void traverse_tree(Node *node, int is_left, FILE *file, char* syscall_number){
         }
 
         fprintf(file, "  mov rax, %s\n", syscall_number);
+        fprintf(file, "  syscall\n");
         node->left = NULL;
         node->right = NULL;
-    
     }
+    return node;
+}
+
+
+// Important to note that the parser checked that the code is already syntactically correct
+// When printing assembly code to file, tabs are two spaces!
+void traverse_tree(Node *node, int is_left, FILE *file, char* syscall_number){
+
+    if(node == NULL){
+        return;
+    }
+
+    if(strcmp(node->value, "EXIT") == 0){
+        syscall_number = "0x02000001";
+    }
+    if(strcmp(node->value, "INT") == 0){
+        // node->left = NULL;
+    }
+    if(strcmp(node->value, "(") == 0){
+
+    }
+
+    // Use our hashmap to find the correct assembly instruction for the operator
+    if(node->type == OPERATOR){
+        generate_operator_code(node, syscall_number, file);
+    }
+
     if(node->type == INT){
+        fprintf(file, "  mov rax, %s\n", syscall_number);
         fprintf(file, "  mov rdi, %s\n", node->value);
+        fprintf(file, "  syscall\n");
+    }
+    if(node->type == IDENTIFIER){
+        if(strcmp(syscall_number, "0x02000001") == 0){
+                fprintf(file, "  mov rax, %s\n", syscall_number);
+                fprintf(file, "  pop rdi\n"); 
+                fprintf(file, "  syscall\n"); 
+        } 
+
     }
     if(strcmp(node->value, ")") == 0){
 
     }
     if(strcmp(node->value, ";") == 0){
-        fprintf(file, "  syscall");
+    
     }
     if(is_left){
 
@@ -148,7 +171,7 @@ int generate_code(Node *root){
     fprintf(file, "_start:\n");
     // print_tree(root);
     
-    display();
+    //display();
 
     zeroRegisters(file);
 
